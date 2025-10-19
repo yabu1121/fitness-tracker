@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import bcrypt from "bcryptjs"
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -38,8 +37,6 @@ export default function SignUpPage() {
     }
 
     try {
-      const hashedPassword = await bcrypt.hash(formData.password, 12)
-
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -48,7 +45,7 @@ export default function SignUpPage() {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
-          password: hashedPassword,
+          password: formData.password, // ハッシュ化はサーバー側で行う
         }),
       })
 
