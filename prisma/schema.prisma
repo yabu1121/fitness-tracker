@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String    // ハッシュ化
+  height        Float?    // cm
+  gender        String?   // male/female/other
+  birthDate     DateTime?
+  goalWeight    Float?    // kg
+  goalDate      DateTime?
+  goalPurpose   String?   // 筋肥大/ダイエット/健康維持
+  weeklyGoal    Int?      // 週の目標回数
+  defaultUnit   String    @default("kg") // kg/lbs
+  createdAt     DateTime  @default(now())
+  
+  workouts      Workout[]
+  bodyWeights   BodyWeight[]
+  achievements  Achievement[]
+  customExercises CustomExercise[]
+}
+
+model Exercise {
+  id          String    @id @default(cuid())
+  name        String    // ベンチプレス
+  nameEn      String?   // Bench Press
+  category    String    // chest/back/legs/shoulders/arms/abs/full
+  isCustom    Boolean   @default(false)
+  description String?
+  
+  workoutSets WorkoutSet[]
+}
+
+model CustomExercise {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  category    String
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Workout {
+  id          String       @id @default(cuid())
+  userId      String
+  date        DateTime     // トレーニング日
+  startTime   DateTime?
+  endTime     DateTime?
+  memo        String?      // 全体メモ
+  totalVolume Float?       // 総重量（自動計算）
+  createdAt   DateTime     @default(now())
+  
+  user        User         @relation(fields: [userId], references: [id])
+  sets        WorkoutSet[]
+}
+
+model WorkoutSet {
+  id          String   @id @default(cuid())
+  workoutId   String
+  exerciseId  String
+  setNumber   Int      // 第何セット
+  weight      Float    // 重量
+  reps        Int      // 回数
+  rpe         Int?     // 1-10
+  isCompleted Boolean  @default(true)
+  memo        String?  // セットごとのメモ
+  
+  workout     Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+}
+
+model BodyWeight {
+  id        String   @id @default(cuid())
+  userId    String
+  weight    Float    // kg
+  date      DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // badge type (first_workout, week_warrior, etc.)
+  unlockedAt  DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model WorkoutTemplate {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String   // "胸トレA"
+  exercises   Json     // 種目とセット数の配列
+  createdAt   DateTime @default(now())
+}
